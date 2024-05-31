@@ -48,7 +48,7 @@ function WizardSummary({ title }) {
     )
 }
 
-export default function FormWizard({ title, category }) {
+export default function FormWizard({ title, category, handleDone }) {
     const [ curStep, setStep ] = useState(0)
     const [ unlockTill, setUpper ] = useState(0)
     const { steps } = useWizard()
@@ -100,7 +100,7 @@ export default function FormWizard({ title, category }) {
                             <hr/>
                             <div className="d-flex justify-content-between">
                                 <button type="button" className={`btn btn-primary ${checkBoundary("lower") ? 'invisible' : ''}`} onClick={() => setStep(prev => --prev)}>Previous</button>
-                                <button type="button" className={`btn btn-primary ${checkBoundary("upper") ? 'invisible' : ''}`} onClick={() => {setStep(prev => ++prev); ((curStep - unlockTill) == 0) ? setUpper(prev => ++prev) : null}}>Next</button>
+                                <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : 'btn-primary'}`} onClick={() => {checkBoundary("upper") ? handleDone() : setStep(prev => ++prev); ((curStep - unlockTill) == 0) ? setUpper(prev => ++prev) : null}}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>
                             </div>
                         </div>
                     </div>
