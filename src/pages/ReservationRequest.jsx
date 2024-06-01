@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 
-import { WizardProvider } from "@contexts/FormWizardContext";
+import WizardProvider, { wizProps } from "@contexts/FormWizardContext";
 import FormWizard from "@components/ui/FormWizard";
 import CustomerInput from "@components/CustomerInput";
-import ReservationInput from "@components/ReservationInput";
-
-import { createObjectFromKey } from "@utils/utils";
+import NewReservation from "@components/NewReservation";
 
 const steps = [
     {
@@ -15,18 +13,32 @@ const steps = [
     },
     {
         name: "Reservation Details",
-        render: ReservationInput,
+        render: NewReservation,
         dataName: "reservation"
     },
 ];
 
+wizProps.wizResultMapping = {
+    "Customer #": "_customerID",
+    "Date & Time": "_dateTime",
+    Table: "_tableId"
+}
+
+wizProps.wizRequestPath = "/reservations"
+
+wizProps.wizRequestOptions = {
+    requestBodyKey: "reservation"
+}
+
 
 export default function ReservationRequest() {
-    const [data, setData] = useState(createObjectFromKey(steps, "dataName"));
-    
+
     return (
-        <WizardProvider contextValues={{data, setData, steps}}>
-            <FormWizard title="Make a Reservation" category="Reservation"/>
+        <WizardProvider 
+            category="Reservation"  
+            wizSteps={steps}
+        >
+            <FormWizard title="Make a Reservation"/>
         </WizardProvider>
     );
 }
