@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 
+import Loader from "@components/ui/Loader";
+
 import { useWizard } from "@contexts/FormWizardContext";
-import { getFieldNames } from "@utils/utils";
+import { getFieldNames, METHODS, wrapWithArrary, removeProps, updateKeys, updateStateObj } from "@utils/utils";
+import useAxiosRequest from "@hooks/useAxiosRequest";
 
 const options = [{
         name: "Search a Customer",
@@ -13,20 +16,12 @@ const options = [{
     }
 ]
 
-const data = [
-    {
-        id: 1,
-        name: "Cust1",
-        phone: "0412315334",
-        email: "cust1@example.com"
-    },
-    {
-        id: 2,
-        name: "Cust2",
-        phone: "0414525264",
-        email: "cust2@example.com"
-    }
-]
+const { rHandle } = updateKeys({
+    id: "_customerId",
+    name: "_customerName",
+    phone: "_customerPhone",
+    email: "_customerEmail"
+})
 
 export default function CustomerInput({ title, dataName }) {
     const [ curOption, setOption ] = useState(0);
@@ -34,12 +29,12 @@ export default function CustomerInput({ title, dataName }) {
         id: -1,
         name: "",
         phone: "",
-        email: "",
+        phone: "",
     });
     const { setData } = useWizard();
 
     useEffect(() => {
-        setData(prev => ({...prev, [dataName]: customer}))
+        updateStateObj(setData).update(customer, [dataName])
     }, [customer])
 
     function renderComponent() {
@@ -63,6 +58,13 @@ export default function CustomerInput({ title, dataName }) {
 }
 
 function SearchCustomerForm({ setCustomer }) {
+    const [ params, setParams ] = useState({ name: "", phone: "" })
+    const { update } = updateStateObj(setParams)
+
+    let { data, loading, error, showResult, enabled, setEnabled } = useAxiosRequest([], METHODS.GET, "/customers", { params })
+
+    data = wrapWithArrary(data) 
+
     return (
         <>
             <div>
@@ -70,59 +72,65 @@ function SearchCustomerForm({ setCustomer }) {
                     <form className="card-body">
                         <div className="mb-3">
                             <label htmlFor="name" className="form-label">Name</label>
-                            <input type="text" className="form-control" id="name" placeholder="Customer name"/>
+                            <input type="text" className="form-control" id="name" placeholder="Customer name" value={params.name} onChange={e => update(e, "name")}/>
                         </div>
                         <div className="mb-5">
                             <label htmlFor="phone" className="form-label">Phone</label>
-                            <input type="text" className="form-control" id="phone" placeholder="Customer phone number"/>
+                            <input type="text" className="form-control" id="phone" placeholder="Customer phone number" value={params.phone} onChange={e => update(e, "phone")}/>
                         </div>
-                        <button type="submit" className="btn btn-primary w-100"><i className="bi bi-search me-2"/>Search</button>
+                        <button type="button" className={`btn w-100 ${!params.name && !params.phone || enabled ? 'disabled btn-secondary' : 'btn-primary'}`} onClick={() => setEnabled(true)}><i className="bi bi-search me-2"/>Search</button>
                     </form>
                 </div>
             </div>
-            <div>
-                <table className="table table-hover caption-top border">
-                    <caption>Found {data.length} customer{ data.length > 1 ? "s" : ""}</caption>
-                    <thead className="table-light">
-                        <tr>
-                            <th><i className="bi bi-check2-square me-2"/></th>
-                            {
-                                getFieldNames(data).map((fieldName) => {
-                                    return <th scope="col" key={fieldName}>{fieldName}</th>
-                                })
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                            {data.map((record, rowIndex) => {
-                                return (
-                                    <tr key={rowIndex}>
-                                        <td key={rowIndex}>
-                                            <input type="radio" className="btn-check" name="customer" value="" onChange={() => setCustomer(record)} id={"customer-"+record.id} autoComplete="off"/>
-                                            <label className="btn btn-outline-primary btn-sm " htmlFor={"customer-"+record.id}>Select</label>
-                                        </td>
-                                        { Object.values(record).map((value, columnIndex) => {
-                                            return (columnIndex == 0)
-                                                ? <th scope="row" key={columnIndex}>{value}</th>
-                                                : <td key={columnIndex}>{value}</td>
-                                        })}
-                                    </tr>
-                                )
-                            })}
-                    </tbody>
-                </table>
-            </div>
+            {showResult && <Loader loading={loading} error={error}>
+                <div>
+                    <table className="table table-hover caption-top border">
+                        <caption>Found {data.length} customer{ data.length > 1 ? "s" : ""}</caption>
+                        <thead className="table-light">
+                            <tr>
+                                <th><i className="bi bi-check2-square me-2"/></th>
+                                {
+                                    getFieldNames(data).map((fieldName) => {
+                                        return <th scope="col" key={fieldName}>{fieldName}</th>
+                                    })
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                                {data.map((record, rowIndex) => {
+                                    record = rHandle(record)
+
+                                    return (
+                                        <tr key={rowIndex}>
+                                            <td key={rowIndex}>
+                                                <input type="radio" className="btn-check" name="customer" onChange={() => setCustomer(record)} id={"customer-" + rowIndex} autoComplete="off"/>
+                                                <label className="btn btn-outline-primary btn-sm " htmlFor={"customer-" + rowIndex}>Select</label>
+                                            </td>
+                                            { Object.values(record).map((value, columnIndex) => {
+                                                return (columnIndex == 0)
+                                                    ? <th scope="row" key={columnIndex}>{value}</th>
+                                                    : <td key={columnIndex}>{value}</td>
+                                            })}
+                                        </tr>
+                                    )
+                                })}
+                        </tbody>
+                    </table>
+                </div>
+            </Loader>}
+            
         </>
     );
 }
 
-const newCustomer = {
-    name: "",
-    phone: "",
-    email: ""
-}
-
 function NewCustomerForm({ customer, setCustomer }) {
+    let { data, loading, error, showResult, enabled, isDataReceived, setEnabled } = useAxiosRequest({}, METHODS.POST, "/customers", {requestBody: removeProps(customer, ["id"])})
+    const { update } = updateStateObj(setCustomer)
+
+    useEffect(() => {
+        if (isDataReceived()) updateStateObj(setCustomer).update(data, "id")
+    }, [data]);
+    
     return (
         <>
             <div>
@@ -130,32 +138,32 @@ function NewCustomerForm({ customer, setCustomer }) {
                     <form className="card-body">
                         <div className="mb-3">
                             <label htmlFor="name" className="form-label">Name</label>
-                            <input type="text" className="form-control" id="name" placeholder="Customer name"/>
+                            <input type="text" className="form-control" id="name" placeholder="Customer name" value={customer.name} onChange={e => update(e, "name")} required/>
                         </div>
                         <div className="mb-3">
                             <label htmlFor="phone" className="form-label">Phone</label>
-                            <input type="text" className="form-control" id="phone" placeholder="Customer phone number"/>
+                            <input type="text" className="form-control" id="phone" placeholder="Customer phone number" value={customer.phone} onChange={e => update(e, "phone")} required/>
                         </div>
                         <div className="mb-5">
                             <label htmlFor="email" className="form-label">Email</label>
-                            <input type="text" className="form-control" id="email" placeholder="Customer email"/>
+                            <input type="text" className="form-control" id="email" placeholder="Customer email" value={customer.email} onChange={e => update(e, "email")}/>
                         </div>
-                        <button type="submit" className="btn btn-primary w-100"><i className="bi bi-plus-lg me-2"/>Submit</button>
+                        <button type="button" className={`btn w-100 ${!customer.name || !customer.phone || enabled ? 'disabled btn-secondary' : 'btn-primary'}`} onClick={() => setEnabled(true)}><i className="bi bi-plus-lg me-2"/>Submit</button>
                     </form>
                 </div>
             </div>
-            { customer.id != -1 &&
+            {showResult && <Loader loading={loading} error={error}>
                 <div>
                     <div className="card shadow border-0 p-3">
                         <div className="card-body">
-                            <div className="mb-5">
-                                <label htmlFor="customerId" className="form-label">New customer registered with <strong>id</strong></label>
-                                <input type="text" className="form-control" id="customerId" value={customer.id} disabled/>
+                            <div className="d-flex align-items-center">
+                                <div className="flex-grow-1">New customer registered with <strong>id</strong></div>
+                                <div className="fs-1">{customer.id}</div>
                             </div>
                         </div>
                     </div>
                 </div>
-            }
+            </Loader>}
         </>
             
     );
