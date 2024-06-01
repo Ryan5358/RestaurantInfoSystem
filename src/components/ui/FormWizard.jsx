@@ -1,57 +1,109 @@
 import React, { useEffect, useState } from "react";
-import { startCase } from "lodash";
+import { set, startCase } from "lodash";
 
+import Loader from "@components/ui/Loader";
 import { useWizard } from "@contexts/FormWizardContext";
+import useAxiosRequest from "@hooks/useAxiosRequest";
+import { updateKeys, METHODS, displayValue } from "@utils/utils";
 
+function WizardResult({ id }) {
+    const { category, wizResultMapping, wizRequestPath } = useWizard();
+
+    const { data, loading, error, showResult, setEnabled } = useAxiosRequest([], METHODS.GET, `${wizRequestPath}/${id}`)
+
+
+    const { rHandle } = updateKeys(wizResultMapping)
+
+    useEffect(() => {
+        setEnabled(true)
+    }, [])
+
+    return (
+        <div>
+            {showResult && <Loader loading={loading} error={error} trigger={() => setEnabled(true)} text={`Retrieving your ${category.toLowerCase()}`} justify={"start"} size={"1.5rem"}>
+                <div>
+                    <p>Below is your {category.toLowerCase()} information:</p>
+                    <ul class="list-group list-group-flush">
+                        { Object.entries(rHandle(data)).map(([key, value]) => {
+                            return (
+                                <li class="list-group-item d-flex justify-content-between align-items-start" key={key}>
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{key}</div>
+                                        {displayValue(value)}
+                                    </div>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </div>
+            </Loader>}
+        </div>
+    );
+}
 
 function WizardSummary({ title }) {
-    const { data, steps } = useWizard();
+    const { category, wizData, wizRequest, wizSteps } = useWizard();
+    const [ result, setResult ] = useState()
 
-    function displayValue(value) {
-        if (!value || value == -1) return "null";
-        if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+    let { data, loading, error, isDataReceived, showResult } = wizRequest;
 
-        const date = new Date(value);
-        return `${date.toLocaleString(undefined, { timeZoneName: "short", hour12: true })}`.toUpperCase()
-
-    }
+    useEffect(() => {
+        if(isDataReceived()) setResult(data)
+    }, [data])
 
     return (
         <>
-            <h2 className="fs-1 fw-light mb-5">{ title }</h2>
+            <h2 className="fs-1 fw-light mb-5">{ isDataReceived() ? "Thank you" : title }</h2>
             
             <div className="row g-5">
-                { steps.map(({ name, dataName }, index) => {
-                    if (index != (steps.length - 1)) {
-                        return (
-                            <div>
-                                <div className="card shadow border-0 p-3" key={index}>
-                                    <div className="card-body">
-                                        <h3 className="fw-light mb-3">{ name }</h3>
-                                        <ul className="list-group list-group-flush">
-                                            { Object.entries(data[dataName]).map(([field, value], index) => {
-                                                return (
-                                                    <li className="list-group-item bg-transparent d-flex justify-content-between" key={index}>
-                                                        <span className="fw-semibold">{startCase(field)}:</span> {displayValue(value)}
-                                                    </li>
-                                                )
-                                            })}
-                                        </ul>
-                                    </div>
+                { !isDataReceived() && wizSteps.map(({ name, dataName }, index) => {
+                    return (
+                        <div>
+                            <div className="card shadow border-0 p-3" key={index}>
+                                <div className="card-body">
+                                    <h3 className="fw-light mb-3">{ name }</h3>
+                                    <ul className="list-group list-group-flush">
+                                        { Object.entries(wizData[dataName]).map(([field, value]) => {
+                                            return (
+                                                <li className="list-group-item bg-transparent d-flex justify-content-between" key={field}>
+                                                    <span className="fw-semibold">{startCase(field)}:</span> {displayValue(value)}
+                                                </li>
+                                            )
+                                        })}
+                                    </ul>
                                 </div>
                             </div>
-                        )
-                    }                    
+                        </div>
+                    )
                 })}
+                {showResult && <Loader loading={loading} error={error}>
+                    <div>
+                        <div className="card border-0 shadow">
+                            <div className="card-body px-4">
+                                <h4 className="card-title mb-3"><i className="bi bi-check-circle-fill me-2 fs-5"/>Your {category.toLowerCase()} is confirmed</h4>
+                                <div className="d-flex align-items-center gap-5 mb-3">
+                                    <div className="flex-grow-1 fs-4">
+                                        Your {category.toLowerCase()}:
+                                    </div>
+                                    <div className="fs-1">#{ result }</div>
+                                </div>
+                                <WizardResult id={result}/>
+                            </div>
+                        </div>
+                    </div>
+                </Loader>}
             </div>
         </>
     )
 }
 
-export default function FormWizard({ title, category, handleDone }) {
-    const [ curStep, setStep ] = useState(0)
-    const [ unlockTill, setUpper ] = useState(0)
-    const { steps } = useWizard()
+export default function FormWizard({ title }) {
+    const { category, wizSteps, wizRequest } = useWizard();
+    const [ steps, setSteps ] = useState(wizSteps)
+    const [ curStep, setStep ] = useState(0);
+    const [ unlockTill, setUnlockTill ] = useState(0);
+
+    const { isDataReceived, enabled, setEnabled } = wizRequest;
 
     function renderComponent() {
         const Component = steps[curStep].render
@@ -63,13 +115,31 @@ export default function FormWizard({ title, category, handleDone }) {
         if (boundary == "upper") return curStep == steps.length - 1
     }
 
-    useEffect(() => {
-        if (!steps.some((step) => step.name == `${category} Summary`)) {
-            steps.push({
-                name:  `${category} Summary`,
-                render: WizardSummary
-            });
+    function handlePrev() {
+        setStep(prev => --prev);
+        if (curStep - unlockTill == 0) setUnlockTill(prev => --prev)
+    }
+
+    function handleNext() {
+        if (checkBoundary("upper")) {
+            setEnabled(true)
+        } else {
+            setStep(prev => ++prev);
         }
+        if (curStep - unlockTill == 0) setUnlockTill(prev => ++prev)
+    }
+
+
+    useEffect(() => {
+        setSteps(prevSteps => {
+            if (!prevSteps.some(step => step.name === `${category} Summary`)) {
+                return [...prevSteps, {
+                    name: `${category} Summary`,
+                    render: WizardSummary
+                }];
+            }
+            return prevSteps;
+        });
     }, []);
 
     return (
@@ -81,7 +151,7 @@ export default function FormWizard({ title, category, handleDone }) {
                         { steps.map(({name}, index) => {
                             return (
                                 <li className="list-group-item bg-transparent" key={index}>
-                                    <button type="button" className={`btn w-100 text-start ${curStep == index ? 'btn-primary' : 'text-primary'} ${index > unlockTill ? 'border-0 text-secondary disabled' : ''}`} key={index} onClick={() => setStep(index)}>
+                                    <button type="button" className={`btn w-100 text-start ${curStep == index && !isDataReceived() ? 'btn-primary' : 'text-primary'} ${index > unlockTill || isDataReceived() ? 'border-0 text-secondary disabled' : ''}`} key={index} onClick={() => setStep(index)}>
                                         {index + 1}. {name}
                                     </button>
                                 </li>
@@ -97,11 +167,11 @@ export default function FormWizard({ title, category, handleDone }) {
                             <div className="mb-4">
                                 { renderComponent() }
                             </div>
-                            <hr/>
+                            {!isDataReceived() && <><hr/>
                             <div className="d-flex justify-content-between">
-                                <button type="button" className={`btn btn-primary ${checkBoundary("lower") ? 'invisible' : ''}`} onClick={() => setStep(prev => --prev)}>Previous</button>
-                                <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : 'btn-primary'}`} onClick={() => {checkBoundary("upper") ? handleDone() : setStep(prev => ++prev); ((curStep - unlockTill) == 0) ? setUpper(prev => ++prev) : null}}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>
-                            </div>
+                                <button type="button" className={`btn btn-primary ${checkBoundary("lower") ? 'invisible' : ''}`} onClick={handlePrev}>Previous</button>
+                                <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : (enabled ? 'disabled btn-secondary' : 'btn-primary')}`} onClick={handleNext}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>
+                            </div></>}
                         </div>
                     </div>
                 </div>
