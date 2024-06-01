@@ -80,7 +80,7 @@ function WizardSummary({ title }) {
                     <div>
                         <div className="card border-0 shadow">
                             <div className="card-body px-4">
-                                <h4 className="card-title mb-3"><i className="bi bi-check-circle-fill me-2 fs-5"/>Your {category.toLowerCase()} is confirmed</h4>
+                                <h4 className="card-title mb-3 d-flex"><i className="bi bi-check-circle-fill me-2 fs-5"/>Your {category.toLowerCase()} is confirmed</h4>
                                 <div className="d-flex align-items-center gap-5 mb-3">
                                     <div className="flex-grow-1 fs-4">
                                         Your {category.toLowerCase()}:
@@ -144,7 +144,7 @@ export default function FormWizard({ title }) {
 
     return (
         <div className="row h-100">
-            <div className="col-lg-3 col-md-4 col-12 bg-body-tertiary rounded-4">
+            <div className="col-xxl-3 col-lg-4 col-12 bg-body-tertiary rounded-4">
                 <div className="px-3 py-4">
                     <h1 className="fs-2 fw-light mb-4">{ title }</h1>
                     <ol className="list-group list-group-flush">
@@ -160,9 +160,9 @@ export default function FormWizard({ title }) {
                     </ol>
                 </div>
             </div>
-            <div className="col-lg-9 col-md-8 col-12">
+            <div className="col-xxl-9 col-lg-8 col-12">
                 <div className="d-flex justify-content-center h-100">
-                    <div className="container col-7">
+                    <div className="container col-xl-7 col-lg-8">
                         <div className="h-100 py-5">
                             <div className="mb-4">
                                 { renderComponent() }
