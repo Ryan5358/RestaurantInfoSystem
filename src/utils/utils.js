@@ -3,7 +3,8 @@ import axios from "axios";
 
 export function getFieldNames(source) {
     if (!source || (Array.isArray(source) ? source.length == 0 : Object.entries(source).length == 0)) return []
-    return Object.keys(source[0]).map(fieldName => {
+    const record = Array.isArray(source) ? source[0] : source
+    return Object.keys(record).map(fieldName => {
         if (fieldName == 'id') return '#'
         else return startCase(fieldName)
     })
@@ -85,8 +86,7 @@ export function handleAxiosRequest(method, path, options) {
             }
             
             if (setData) {
-                if (response.data) setData(response.data);
-                else setData(response)
+                setData(response.data);
             }
         } catch (error) {
             if(setError) setError(error)
