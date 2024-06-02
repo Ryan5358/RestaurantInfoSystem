@@ -4,7 +4,7 @@ import WizardProvider, { wizProps } from "@contexts/FormWizardContext";
 import ReservationInput from "@components/ReservationInput";
 import NewOrder from "@components/NewOrder";
 
-export default function ReservationRequest() {
+export default function OrderPlacement() {
     const steps = [
         {
             name: "Reservation Details",
