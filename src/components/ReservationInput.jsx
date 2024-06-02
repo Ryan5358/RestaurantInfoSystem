@@ -1,33 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+import Loader from "@components/ui/Loader";
 
 import { useWizard } from "@contexts/FormWizardContext";
-import { getFieldNames } from "@utils/utils";
+import { getFieldNames, METHODS, updateKeys, updateStateObj, displayValue } from "@utils/utils";
+import useAxiosRequest from "@hooks/useAxiosRequest";
 
-const tables = [
-    {
-        id: 1,
-        size: 4,
-        available: true,
-    },
-    {
-        id: 2,
-        size: 4,
-        available: false,
-    },
-]
+
+const { rHandle } = updateKeys({
+    id: "_reservationID",
+    customerId: "_customerID",
+    dateTime: "_dateTime",
+    table: "_tableId",
+})
 
 export default function ReservationInput({ title, dataName }) {
-    const { data, setData } = useWizard();
-
     const [ reservation, setReservation ] = useState({
-        customerId: data.customer.id,
-        dateTime: "",
-        partySize: "",
-        table: -1
-    })
+        id: "",
+        name: "",
+        phone: "",
+        phone: "",
+    });
+    const { update } = updateStateObj(setReservation);
+
+    const { setData } = useWizard();
+
+    const { data, loading, error, showResult, enabled, isDataEmpty, setEnabled } = useAxiosRequest([], METHODS.GET, `/reservations/${reservation.id}`)
+
+    const record = rHandle(data);
 
     useEffect(() => {
-        setData(prev => ({...prev, [dataName]: reservation}))
+        if(reservation.id != "") updateStateObj(setData).update(reservation, [dataName])
     }, [reservation])
 
     return (
@@ -38,59 +41,44 @@ export default function ReservationInput({ title, dataName }) {
                     <div className="card shadow border-0 p-3">
                         <form className="card-body">
                             <div className="mb-3">
-                                <label htmlFor="customerId" className="form-label">Customer Id</label>
-                                <input type="text" className="form-control" id="customerId" value={reservation.customerId} disabled/>
+                                <label htmlFor="reservation-id" className="form-label">Reservation #</label>
+                                <input type="text" className="form-control" id="reservation-id" placeholder="Reservation ID" value={reservation.id} onChange={e => update(e, "id")}/>
                             </div>
-                            <div className="mb-3">
-                                <label htmlFor="dateTime" className="form-label">Date and Time</label>
-                                <input type="datetime-local" className="form-control" id="dateTime" placeholder="Date and Time" value={reservation.dateTime} onChange={(event) => setReservation(prev => ({...prev, dateTime: event.target.value}))}/>
-                            </div>
-                            <div className="mb-3">
-                                <label htmlFor="partySize" className="form-label">Party size</label>
-                                <input type="number" className="form-control" id="partySize" value={reservation.partySize} placeholder="Party size" onChange={(event) => setReservation(prev =>({...prev, partySize: event.target.value}))}/>
-                            </div>
-                            <div className="mb-5">
-                                <label htmlFor="customerId" className="form-label">Table</label>
-                                <input type="text" className="form-control" id="customerId" value={reservation.table == -1 ? "" : reservation.table} disabled/>
-                            </div>
-                            <button type="submit" className="btn btn-primary w-100"><i className="bi bi-search me-2"/>Search Table</button>
+                            <button type="button" className={`btn w-100 ${reservation.id == "" || enabled ? 'disabled btn-secondary' : 'btn-primary'}`} onClick={() => setEnabled(true)}><i className="bi bi-search me-2"/>Search</button>
                         </form>
                     </div>
                 </div>
-                <div>
-                    <table className="table table-hover caption-top border">
-                        <caption>Found {tables.length} table{ tables.length > 1 ? "s" : ""}</caption>
-                        <thead className="table-light">
-                            <tr>
-                                <th><i className="bi bi-check2-square me-2"/></th>
-                                {
-                                    getFieldNames(tables).map((fieldName) => {
-                                        return <th scope="col" key={fieldName}>{fieldName}</th>
-                                    })
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                                {tables.map((record, rowIndex) => {
-                                    return (
-                                        <tr key={rowIndex}>
-                                            <td key={rowIndex}>
-                                                <input type="radio" className="btn-check" name="table" value="" onChange={() => setReservation(prev => ({...prev, table: record.id}))} id={"table-"+record.id} autoComplete="off"/>
-                                                <label className={`btn btn-sm ${!record.available ? 'disabled border-0' : 'btn-outline-primary'}`} htmlFor={"table-"+record.id}>Select</label>
-                                            </td>
-                                            { Object.values(record).map((value, columnIndex) => {
-                                                return (columnIndex == 0)
-                                                    ? <th scope="row" key={columnIndex}>{value}</th>
-                                                    : <td key={columnIndex}>{(value === true | value === false) ? (value ? <i className="bi bi-check2 fs-5"/> : <i className="bi bi-x-lg"/>) : value}</td>
-                                            })}
-                                        </tr>
-                                    )
-                                })}
-                        </tbody>
-                    </table>
-                </div>
+                {showResult && <Loader loading={loading} error={error} isEmpty={isDataEmpty()}>
+                    <div>
+                        <table className="table table-hover caption-top border">
+                            <caption>Reservation information</caption>
+                            <thead className="table-light">
+                                <tr>
+                                    <th className="visually-hidden"><i className="bi bi-check2-square me-2"/></th>
+                                    {
+                                        getFieldNames(record).map((fieldName) => {
+                                            return <th scope="col" key={fieldName}>{fieldName}</th>
+                                        })
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    <tr>
+                                        <td className="visually-hidden">
+                                            <input type="hidden" name="reservation" onChange={() => setReservation(record)} id="reservation" autoComplete="off" disabled checked/>
+                                            <label className="visually-hidden" htmlFor="reservation">Select</label>
+                                        </td>
+                                        { Object.values(record).map((value, index) => {
+                                            return (index == 0)
+                                                ? <th scope="row" key={index}>{value}</th>
+                                                : <td key={index}>{displayValue(value)}</td>
+                                        })}
+                                    </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </Loader>}
             </div>
-            
         </>
     );
 }
