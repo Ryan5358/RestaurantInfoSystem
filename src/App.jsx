@@ -5,14 +5,13 @@ import '@/App.css'
 
 // import pages
 import ReservationRequest from '@pages/ReservationRequest'
-import OrderPlacement from '@pages/OrderPlacement'
 
 
 
 function App() {
 
   return (
-    <OrderPlacement/>
+    <ReservationRequest/>
   )
 }
 
