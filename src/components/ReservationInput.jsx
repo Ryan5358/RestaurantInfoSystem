@@ -5,6 +5,7 @@ import Loader from "@components/ui/Loader";
 import { useWizard } from "@contexts/FormWizardContext";
 import { getFieldNames, METHODS, updateKeys, updateStateObj, displayValue } from "@utils/utils";
 import useAxiosRequest from "@hooks/useAxiosRequest";
+import { isEmpty } from "lodash";
 
 
 const { rHandle } = updateKeys({
@@ -15,22 +16,27 @@ const { rHandle } = updateKeys({
 })
 
 export default function ReservationInput({ title, dataName }) {
+    const { wizData, setData } = useWizard();
+
     const [ reservation, setReservation ] = useState({
         id: "",
-        name: "",
-        phone: "",
-        phone: "",
+        customerId: "",
+        dateTime: "",
+        table: ""
     });
-    const { update } = updateStateObj(setReservation);
 
-    const { setData } = useWizard();
+    const { update } = updateStateObj(setReservation);
 
     const { data, loading, error, showResult, enabled, isDataEmpty, setEnabled } = useAxiosRequest([], METHODS.GET, `/reservations/${reservation.id}`)
 
     const record = rHandle(data);
 
     useEffect(() => {
-        if(reservation.id != "") updateStateObj(setData).update(reservation, [dataName])
+        if (!isDataEmpty()) setReservation(record)
+    }, [data])
+
+    useEffect(() => {
+        if(!isDataEmpty()) updateStateObj(setData).update(reservation, [dataName])
     }, [reservation])
 
     return (
@@ -54,7 +60,7 @@ export default function ReservationInput({ title, dataName }) {
                             <caption>Reservation information</caption>
                             <thead className="table-light">
                                 <tr>
-                                    <th className="visually-hidden"><i className="bi bi-check2-square me-2"/></th>
+                                    <th><i className="bi bi-check2-square me-2"/></th>
                                     {
                                         getFieldNames(record).map((fieldName) => {
                                             return <th scope="col" key={fieldName}>{fieldName}</th>
@@ -64,10 +70,7 @@ export default function ReservationInput({ title, dataName }) {
                             </thead>
                             <tbody>
                                     <tr>
-                                        <td className="visually-hidden">
-                                            <input type="hidden" name="reservation" onChange={() => setReservation(record)} id="reservation" autoComplete="off" disabled checked/>
-                                            <label className="visually-hidden" htmlFor="reservation">Select</label>
-                                        </td>
+                                        <td><i className="bi bi-check-circle"/></td>
                                         { Object.values(record).map((value, index) => {
                                             return (index == 0)
                                                 ? <th scope="row" key={index}>{value}</th>
