@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { set, startCase } from "lodash";
+import { isEmpty, startCase } from "lodash";
 
 import Loader from "@components/ui/Loader";
 import { useWizard } from "@contexts/FormWizardContext";
@@ -22,7 +22,7 @@ function WizardResult({ id }) {
         <div>
             {showResult && <Loader loading={loading} error={error} trigger={() => setEnabled(true)} text={`Retrieving your ${category.toLowerCase()}`} justify={"start"} size={"1.5rem"}>
                 <div>
-                    <p>Below is your {category.toLowerCase()} information:</p>
+                    <p className="mb-3">Below is your {category.toLowerCase()} information:</p>
                     <ul class="list-group list-group-flush">
                         { Object.entries(rHandle(data)).map(([key, value]) => {
                             return (
@@ -78,9 +78,9 @@ function WizardSummary({ title }) {
                 })}
                 {showResult && <Loader loading={loading} error={error}>
                     <div>
-                        <div className="card border-0 shadow">
-                            <div className="card-body px-4">
-                                <h4 className="card-title mb-3 d-flex"><i className="bi bi-check-circle-fill me-2 fs-5"/>Your {category.toLowerCase()} is confirmed</h4>
+                        <div className="card border-0 shadow-lg">
+                            <div className="card-body px-4 pt-4">
+                                <h4 className="card-title mb-3 d-flex text-success"><i className="bi bi-check-circle-fill me-2 fs-5"/>Your {category.toLowerCase()} is confirmed</h4>
                                 <div className="d-flex align-items-center gap-5 mb-3">
                                     <div className="flex-grow-1 fs-4">
                                         Your {category.toLowerCase()}:
@@ -98,7 +98,7 @@ function WizardSummary({ title }) {
 }
 
 export default function FormWizard({ title }) {
-    const { category, wizSteps, wizRequest } = useWizard();
+    const { category, wizSteps, wizRequest, wizData } = useWizard();
     const [ steps, setSteps ] = useState(wizSteps)
     const [ curStep, setStep ] = useState(0);
     const [ unlockTill, setUnlockTill ] = useState(0);
@@ -127,6 +127,10 @@ export default function FormWizard({ title }) {
             setStep(prev => ++prev);
         }
         if (curStep - unlockTill == 0) setUnlockTill(prev => ++prev)
+    }
+
+    function isStepCompleted() {
+        return !isEmpty(wizData[steps[curStep].dataName]);
     }
 
 
@@ -170,7 +174,7 @@ export default function FormWizard({ title }) {
                             {!isDataReceived() && <><hr/>
                             <div className="d-flex justify-content-between">
                                 <button type="button" className={`btn btn-primary ${checkBoundary("lower") ? 'invisible' : ''}`} onClick={handlePrev}>Previous</button>
-                                <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : (enabled ? 'disabled btn-secondary' : 'btn-primary')}`} onClick={handleNext}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>
+                                <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : (enabled || !isStepCompleted() ? 'disabled btn-secondary' : 'btn-primary')}`} onClick={handleNext}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>
                             </div></>}
                         </div>
                     </div>

@@ -30,7 +30,7 @@ export default function NewReservation({ title, dataName }) {
     let tables = wrapWithArrary(data) 
 
     useEffect(() => {
-        updateStateObj(setData).update(reservation, [dataName])
+        if(reservation.tableId != -1) updateStateObj(setData).update(reservation, [dataName])
     }, [reservation])
 
     return (
