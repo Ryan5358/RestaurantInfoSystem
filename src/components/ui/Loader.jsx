@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Loader({ loading, error, trigger, justify, align, colorClass, size, text, children }) {
+export default function Loader({ loading, error, isEmpty, trigger, justify, align, colorClass, size, text, children }) {
     const defaultSize = "2rem"
 
     return (
@@ -24,7 +24,17 @@ export default function Loader({ loading, error, trigger, justify, align, colorC
                             </div>
                         </div>
                     </>
-                    : <>{children}</>
+                    : isEmpty
+                        ? <>
+                            <div>
+                                <div className="position-relative alert alert-secondary" role="alert">
+                                    {!!trigger && <button type="button" className="btn btn-outline-dark position-absolute end-0 me-3" onClick={trigger}><i className="bi bi-arrow-clockwise"/></button>}
+                                    <h4 className="alert-heading py-1"><i className="bi bi-exclamation-circle me-2 fs-5"/>Data not found</h4>
+                                </div>
+                            </div>
+                        
+                        </>
+                        : <>{children}</>
             }
         </>
     );

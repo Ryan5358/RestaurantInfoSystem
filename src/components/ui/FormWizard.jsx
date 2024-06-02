@@ -45,18 +45,18 @@ function WizardSummary({ title }) {
     const { category, wizData, wizRequest, wizSteps } = useWizard();
     const [ result, setResult ] = useState()
 
-    let { data, loading, error, isDataReceived, showResult } = wizRequest;
+    let { data, loading, error, isDataEmpty, showResult } = wizRequest;
 
     useEffect(() => {
-        if(isDataReceived()) setResult(data)
+        if(!isDataEmpty()) setResult(data)
     }, [data])
 
     return (
         <>
-            <h2 className="fs-1 fw-light mb-5">{ isDataReceived() ? "Thank you" : title }</h2>
+            <h2 className="fs-1 fw-light mb-5">{ !isDataEmpty() ? "Thank you" : title }</h2>
             
             <div className="row g-5">
-                { !isDataReceived() && wizSteps.map(({ name, dataName }, index) => {
+                { !isDataEmpty() && wizSteps.map(({ name, dataName }, index) => {
                     return (
                         <div>
                             <div className="card shadow border-0 p-3" key={index}>
@@ -103,7 +103,7 @@ export default function FormWizard({ title }) {
     const [ curStep, setStep ] = useState(0);
     const [ unlockTill, setUnlockTill ] = useState(0);
 
-    const { isDataReceived, enabled, setEnabled } = wizRequest;
+    const { isDataEmpty, enabled, setEnabled } = wizRequest;
 
     function renderComponent() {
         const Component = steps[curStep].render
@@ -155,7 +155,7 @@ export default function FormWizard({ title }) {
                         { steps.map(({name}, index) => {
                             return (
                                 <li className="list-group-item bg-transparent" key={index}>
-                                    <button type="button" className={`btn w-100 text-start ${curStep == index && !isDataReceived() ? 'btn-primary' : 'text-primary'} ${index > unlockTill || isDataReceived() ? 'border-0 text-secondary disabled' : ''}`} key={index} onClick={() => setStep(index)}>
+                                    <button type="button" className={`btn w-100 text-start ${curStep == index && isDataEmpty() ? 'btn-primary' : 'text-primary'} ${index > unlockTill || !isDataEmpty() ? 'border-0 text-secondary disabled' : ''}`} key={index} onClick={() => setStep(index)}>
                                         {index + 1}. {name}
                                     </button>
                                 </li>
@@ -171,7 +171,7 @@ export default function FormWizard({ title }) {
                             <div className="mb-4">
                                 { renderComponent() }
                             </div>
-                            {!isDataReceived() && <><hr/>
+                            {isDataEmpty() && <><hr/>
                             <div className="d-flex justify-content-between">
                                 <button type="button" className={`btn btn-primary ${checkBoundary("lower") ? 'invisible' : ''}`} onClick={handlePrev}>Previous</button>
                                 <button type="button" className={`btn ${checkBoundary('upper') ? 'btn-success' : (enabled || !isStepCompleted() ? 'disabled btn-secondary' : 'btn-primary')}`} onClick={handleNext}>{checkBoundary("upper") ? <span><i className="bi bi-send me-2"/>Submit</span> : 'Next'}</button>

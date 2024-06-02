@@ -27,7 +27,7 @@ export default function NewReservation({ title, dataName }) {
     const params = { size: reservation.partySize }
     const { data, loading, setEnabled } = useAxiosRequest([], METHODS.GET, "/tables", {params})
 
-    let tables = wrapWithArrary(data) 
+    const tables = wrapWithArrary(data) 
 
     useEffect(() => {
         if(reservation.tableId != -1) updateStateObj(setData).update(reservation, [dataName])
