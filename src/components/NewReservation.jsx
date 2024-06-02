@@ -25,7 +25,7 @@ export default function NewReservation({ title, dataName }) {
     const { update } = updateStateObj(setReservation)
 
     const params = { size: reservation.partySize }
-    const { data, loading, setEnabled } = useAxiosRequest([], METHODS.GET, "/tables", {params})
+    const { data, loading, isDataEmpty, setEnabled } = useAxiosRequest([], METHODS.GET, "/tables", {params})
 
     const tables = wrapWithArrary(data) 
 
@@ -60,7 +60,7 @@ export default function NewReservation({ title, dataName }) {
                         </form>
                     </div>
                 </div>
-                {(tables.length > 0 || loading) && <Loader loading={loading}>
+                {(tables.length > 0 || loading) && <Loader loading={loading} isEmpty={isDataEmpty()}>
                         <div>
                             <table className="table table-hover caption-top border">
                                 <caption>Found {tables.length} table{ tables.length > 1 ? "s" : ""}</caption>
