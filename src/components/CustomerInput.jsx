@@ -61,7 +61,7 @@ function SearchCustomerForm({ setCustomer }) {
     const [ params, setParams ] = useState({ name: "", phone: "" })
     const { update } = updateStateObj(setParams)
 
-    let { data, loading, error, showResult, enabled, setEnabled } = useAxiosRequest([], METHODS.GET, "/customers", { params })
+    let { data, loading, error, showResult, isDataEmpty, enabled, setEnabled } = useAxiosRequest([], METHODS.GET, "/customers", { params })
 
     data = wrapWithArrary(data) 
 
@@ -82,7 +82,7 @@ function SearchCustomerForm({ setCustomer }) {
                     </form>
                 </div>
             </div>
-            {showResult && <Loader loading={loading} error={error}>
+            {showResult && <Loader loading={loading} error={error} isEmpty={isDataEmpty()}>
                 <div>
                     <table className="table table-hover caption-top border">
                         <caption>Found {data.length} customer{ data.length > 1 ? "s" : ""}</caption>
