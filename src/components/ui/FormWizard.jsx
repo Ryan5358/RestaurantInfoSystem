@@ -23,7 +23,7 @@ function WizardResult({ id }) {
             {showResult && <Loader loading={loading} error={error} trigger={() => setEnabled(true)} text={`Retrieving your ${category.toLowerCase()}`} justify={"start"} size={"1.5rem"}>
                 <div>
                     <p className="mb-3">Below is your {category.toLowerCase()} information:</p>
-                    <ul class="list-group list-group-flush">
+                    <ul className="list-group list-group-flush">
                         { Object.entries(rHandle(data)).map(([key, value]) => {
                             return (
                                 <li class="list-group-item d-flex justify-content-between align-items-start" key={key}>
@@ -54,7 +54,6 @@ function WizardSummary({ title }) {
     return (
         <>
             <h2 className="fs-1 fw-light mb-5">{ !isDataEmpty() ? "Thank you" : title }</h2>
-            
             <div className="row g-5">
                 { isDataEmpty() && wizSteps.map(({ name, dataName }, index) => {
                     return (
