@@ -34,7 +34,7 @@ export default function CustomerInput({ title, dataName }) {
     const { setData } = useWizard();
 
     useEffect(() => {
-        updateStateObj(setData).update(customer, [dataName])
+        if(customer.id != -1) updateStateObj(setData).update(customer, [dataName])
     }, [customer])
 
     function renderComponent() {
