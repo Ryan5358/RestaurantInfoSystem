@@ -29,7 +29,7 @@ export default function CustomerInput({ title, dataName }) {
         id: -1,
         name: "",
         phone: "",
-        phone: "",
+        email: "",
     });
     const { setData } = useWizard();
 
