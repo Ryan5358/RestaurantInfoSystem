@@ -30,12 +30,13 @@ export default function NewReservation({ title, dataName }) {
     const tables = wrapWithArrary(data) 
 
     useEffect(() => {
-        if(reservation.tableId != -1) updateStateObj(setData).update(reservation, [dataName])
+        if(reservation.tableId != -1 && reservation.dateTime != "") updateStateObj(setData).update(reservation, [dataName])
     }, [reservation])
 
     return (
         <>
             <h2 className="fs-1 fw-light mb-5">{ title }</h2>
+            { JSON.stringify(reservation) } { JSON.stringify(useWizard().wizData) }
             <div className="row g-5">
                 <div>
                     <div className="card shadow border-0 p-3">
@@ -46,7 +47,7 @@ export default function NewReservation({ title, dataName }) {
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="dateTime" className="form-label">Date and Time</label>
-                                <input type="datetime-local" className="form-control" id="dateTime" placeholder="Date and Time" value={reservation.dateTime} onChange={e => update(toMySQLDateTime(e.target.value), "dateTime")}/>
+                                <input type="datetime-local" className="form-control" id="dateTime" placeholder="Date and Time" min={toMySQLDateTime(new Date())} value={reservation.dateTime} onChange={e => update(e.target.min <= toMySQLDateTime(e.target.value) ? toMySQLDateTime(e.target.value) : "", "dateTime")}/>
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="partySize" className="form-label">Party size</label>
