@@ -56,7 +56,7 @@ function WizardSummary({ title }) {
             <h2 className="fs-1 fw-light mb-5">{ !isDataEmpty() ? "Thank you" : title }</h2>
             
             <div className="row g-5">
-                { !isDataEmpty() && wizSteps.map(({ name, dataName }, index) => {
+                { isDataEmpty() && wizSteps.map(({ name, dataName }, index) => {
                     return (
                         <div>
                             <div className="card shadow border-0 p-3" key={index}>
