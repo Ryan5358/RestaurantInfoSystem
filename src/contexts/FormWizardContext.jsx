@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 
+import FormWizard from "@components/ui/FormWizard";
+
 import useAxiosRequest from "@hooks/useAxiosRequest";
 
 import { createObjectFromKey, METHODS } from "@utils/utils";
@@ -10,7 +12,7 @@ export const useWizard = () => {
     return useContext(WizardContext);
 };
 
-export default function WizardProvider ({ children, category, requestInitialData, wizSteps, contextValues }) {
+export default function WizardProvider ({ title, category, requestInitialData, wizSteps, contextValues }) {
     const [wizData, setData] = useState(createObjectFromKey(wizSteps, "dataName"));
     const wizRequest = useAxiosRequest(requestInitialData || {}, METHODS.POST, wizProps.wizRequestPath)
 
@@ -20,7 +22,7 @@ export default function WizardProvider ({ children, category, requestInitialData
 
     return (
         <WizardContext.Provider value={{category, wizData, setData, wizRequest, wizSteps, ...wizProps, ...contextValues}}>
-            {children}
+            <FormWizard title={title}/>
         </WizardContext.Provider>
     );
 };
