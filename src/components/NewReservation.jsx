@@ -36,7 +36,6 @@ export default function NewReservation({ title, dataName }) {
     return (
         <>
             <h2 className="fs-1 fw-light mb-5">{ title }</h2>
-            { JSON.stringify(reservation) } { JSON.stringify(useWizard().wizData) }
             <div className="row g-5">
                 <div>
                     <div className="card shadow border-0 p-3">
@@ -97,7 +96,6 @@ export default function NewReservation({ title, dataName }) {
                         </div>
                 </Loader>}
             </div>
-            
         </>
     );
 }
