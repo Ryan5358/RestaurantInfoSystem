@@ -124,11 +124,11 @@ function SearchCustomerForm({ setCustomer }) {
 }
 
 function NewCustomerForm({ customer, setCustomer }) {
-    let { data, loading, error, showResult, enabled, isDataEmpty, setEnabled } = useAxiosRequest({}, METHODS.POST, "/customers", {requestBody: removeProps(customer, ["id"])})
+    let { data, loading, error, showResult, enabled, isDataEmpty, setEnabled } = useAxiosRequest("", METHODS.POST, "/customers", {requestBody: removeProps(customer, ["id"])})
     const { update } = updateStateObj(setCustomer)
 
     useEffect(() => {
-        if (isDataEmpty()) updateStateObj(setCustomer).update(data, "id")
+        if (!isDataEmpty()) updateStateObj(setCustomer).update(data, "id")
     }, [data]);
     
     return (

@@ -4,14 +4,14 @@ import viteLogo from '/vite.svg'
 import '@/App.css'
 
 // import pages
-import OrderPlacement from '@pages/OrderPlacement'
+import ReservationRequest from '@pages/ReservationRequest'
 
 
 
 function App() {
 
   return (
-    <OrderPlacement/>
+    <ReservationRequest/>
   )
 }
 
